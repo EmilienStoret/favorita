@@ -1,5 +1,6 @@
 from prophet import Prophet
 import pandas as pd
+import numpy as np
 
 def drop_rename_columns(df):
     """Keep only useful columns for Prophet forecast"""
@@ -30,8 +31,9 @@ def MAPE_of_forecast(forecast, df_test):
     return MAPE(forecast_only['yhat'], df_test['y'])
 
 def MAPE(y_hat, y):
-    """Compute the MAPE between two vectors: our prediction and the actual value"""
-    return sum(abs((y_hat-y)/y))
+    y_hat = np.array(y_hat)
+    y = np.array(y)
+    return np.mean(np.abs((y_hat-y)/y))
 
 def get_baseline_score(df):
     """Re-use all the functions above to directly compute a baseline score of a given dataframe"""

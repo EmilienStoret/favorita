@@ -16,14 +16,15 @@ def split_csv(path, column1):
 def split_csv_2(path, column1, column2):
     df = pd.read_csv(path)
 
-    for element1 in df[column1].unique():
-        df_label1 = df[df[column1] == element1]
+    for store in df[column1].unique():
+        df_label1 = df[df[column1] == store]
 
-        for element2 in df_label1[column2].unique():
-            df_label2 = df_label1[df_label1[column2] == element2]
+        for family in df_label1[column2].unique():
+            df_label2 = df_label1[df_label1[column2] == family]
             df_label2.to_csv(f'scratch.csv', index=False, header=True)
             upload_blob("favorita_batch1002", f'scratch.csv',
-                        f'split_data/bystore_bycat{element1}-{element2}.csv')
+                        f'split_data_bystore_bycat/store{store}-{family}.csv')
+
 
 
 
@@ -43,7 +44,6 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     blob.upload_from_filename(source_file_name)
 
     print(f"File {source_file_name} uploaded to {destination_blob_name}.")
-
 
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
@@ -74,6 +74,6 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
 
 
 if __name__ == "__main__":
-    # split_csv_2("Data/df_main_cat.csv", 'store_nbr', 'family')
+    split_csv_2("Data/df_main_cat.csv", 'store_nbr', 'family')
 
-    split_csv("Data/df_main_V4.csv", 'store_nbr')
+    #split_csv("Data/df_main_V4.csv", 'store_nbr')

@@ -1,14 +1,15 @@
 import streamlit as st
 import pandas as pd
+from PIL import Image
 
 # Main page
 
 st.title("Retail Sales Dashboard")
 
-tab1, tab2 = st.tabs(['Favorita Sales', 'Retail Sales'])
+tab1, tab2, tab4 = st.tabs(['Favorita Sales', 'Retail Sales', 'Forecast Q2 2017'])
 
 with tab1:
-    st.header("Favorita Sales")
+    st.header("")
     ## Load data
 
     ## What is favorita, etc.
@@ -34,7 +35,25 @@ with tab2:
         except Exception as e:
             st.markdown(f"__Wrong column format:__\n\n__{e}__")
 
+with tab4:
+    image1 = Image.open('charts_and_csv/components.png')
+    image2 = Image.open('charts_and_csv/Q2_2017.png')
+    image3 = Image.open('charts_and_csv/April_2017.png')
+    st.header("Cross-val score MDAPE: 7.8%" )
 
+    st.header("Forecast Q2 2017")
+    st.image(image2)
+    st.header("Forecast on April 2017 - Intra-month view")
+    st.image(image3)
+    st.header("Components of the model")
+    st.image(image1)
+    st.header("Download full quarter forecast (.csv format)")
+    with open("charts_and_csv/forecast_Q2_2017.csv") as file:
+        btn = st.download_button(
+                label="Download",
+                data=file,
+                file_name='forecast.csv'
+            )
 
 # Predictions for the next quarter: give a range of dates and a prediction for period
 # Give error metrics and confidence intervals
@@ -43,9 +62,7 @@ with tab2:
 ## Prediction Charts and Data Analysis plots
 #st.plotly_chart("plotly chart")
 # st.markdown("""--> Overall Prediction Plots \n \n Give some stats, etc.""")
-st.markdown(f"### Sales by Store")
-st.markdown(f"### Sales by Item")
-st.markdown(f"### Sales by Store and Item")
+
 
 
 # Causal Inference and Insights

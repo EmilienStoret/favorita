@@ -26,22 +26,23 @@ def store_selection(store_selected):
 def grid_search(df):
 
 # Create parameter grid
-    #params_grid = {'seasonality_mode':(['multiplicative']),
-    #           'changepoint_prior_scale':[0.05, 0.08, 0.11],
-    #           'seasonality_prior_scale':[0.05, 0.08, 0.11],
-    #           'prior_scale_is_holiday':[0.01, 0.5, 0.1],
-    #           'prior_scale_onpromotion':[0.01, 0.5, 0.1],
-    #           'prior_scale_dcoilwtico':[0.01, 0.5, 0.1],
-    #           'fourier_order':[5]
-    #          }
     params_grid = {'seasonality_mode':(['multiplicative']),
-           'changepoint_prior_scale':[0.05],
-           'seasonality_prior_scale':[0.08],
-           'prior_scale_is_holiday':[0.5],
-           'prior_scale_onpromotion':[ 0.1],
-           'prior_scale_dcoilwtico':[0.01],
-           'fourier_order':[5]
+               'changepoint_prior_scale':[0.05, 0.08, 0.11],
+               'seasonality_prior_scale':[0.05, 0.08, 0.11],
+               'prior_scale_is_holiday':[0.01, 0.5, 0.1],
+               'prior_scale_onpromotion':[0.01, 0.5, 0.1],
+               'prior_scale_dcoilwtico':[0.01, 0.5, 0.1],
+               'fourier_order':[5]
               }
+    #Pour TEST, runs easier
+    #params_grid = {'seasonality_mode':(['multiplicative']),
+    #       'changepoint_prior_scale':[0.05],
+    #       'seasonality_prior_scale':[0.08],
+    #       'prior_scale_is_holiday':[0.5],
+    #       'prior_scale_onpromotion':[ 0.1],
+    #       'prior_scale_dcoilwtico':[0.01],
+    #       'fourier_order':[5]
+    #          }
 # Get all the model parameters in a list of dictionary
     grid = ParameterGrid(params_grid)
 
@@ -95,10 +96,10 @@ def get_forecast(df,
     future.insert(1, 'onpromotion', df['onpromotion'])
     future.insert(2, 'is_holiday', df['is_holiday'])
     future.insert(3, 'dcoilwtico', df['dcoilwtico'])
-    #df_pred= m.predict(future)
-    #mask = (df_pred['ds'] >='2017-04-01') & (df_pred['ds'] < '2017-06-30')
-    #df_pred.loc[mask]
-    return m.predict(future), m
+    df_pred= m.predict(future)
+    mask = (df_pred['ds'] >='2017-04-01') & (df_pred['ds'] < '2017-06-30')
+    df_pred.loc[mask]
+    return m, m.predict(future),df_pred.loc[mask]
 
 def regressor_delimitor(df):
     df.reset_index(inplace=True, drop=True)

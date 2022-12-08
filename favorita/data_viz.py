@@ -3,21 +3,23 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from pandas import Series
+import seaborn as sns
 
 # Visualization
 import seaborn as sns
 import matplotlib.pyplot as plt
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
+from prophet.plot import plot_plotly
 
 #import functions
-from favorita.functions_model import grid_search, get_forecast, store_selection, regressor_delimitor
-
+from favorita.functions_model import grid_search, get_forecast, store_selection
+from favorita.functions_model import get_forecast
 
 # preprocess for data viz
 def preproc_viz(df, selected_store: int):
     #import data
-    df= store_selection(selected_store)
+    #df= store_selection(selected_store)
     #adding temporal data
     df['ds'] = pd.to_datetime(df['ds'])
     df['week_day'] = df["ds"].dt.day_name()
@@ -95,3 +97,29 @@ def get_graph_lowest(df):
                       hoverlabel=dict(bgcolor="#f2f2f2", font_size=13, font_family="Lato, sans-serif"),
                       showlegend=False)
      return fig
+
+def get_graph_pred(df, df_pred):
+    f, ax = plt.subplots(figsize=(14,5))
+
+    df['ds'] = pd.to_datetime(df['ds'], format ='%Y-%m-%d')
+    df_pred['ds'] = pd.to_datetime(df_pred['ds'], format ='%Y-%m-%d')
+
+    df_pred = df_pred[(df_pred['ds']>='2017-04-01')&(df_pred['ds']<'2017-07-01')]
+    df_true = df[(df['ds']>='2017-04-01')&(df['ds']<'2017-07-01')]
+    df_true.groupby('ds').agg({'y':'sum'})
+    df_true.reset_index(drop=True, inplace=True)
+
+    sns.lineplot(x=df_pred['ds'], y=df_pred['yhat'], ax=ax).set(title='sales predictions vs true sales')
+    sns.lineplot(x=df_true['ds'], y=df_true['y'], ax=ax)
+    ax.legend('yhat','y')
+    #ax.title('sales predictions vs true sales')
+    return f
+
+def MAPE(df,df_pred):
+    df_pred = df_pred[(df_pred['ds']>='2017-04-01')&(df_pred['ds']<'2017-07-01')]
+    df_true = df[(df['ds']>='2017-04-01')&(df['ds']<'2017-07-01')]
+    y_pred=df_pred['yhat']
+    y_true=df_true['y']
+    """Compute the MAPE between two vectors: our prediction and the actual value"""
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100

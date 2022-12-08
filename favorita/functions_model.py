@@ -15,15 +15,22 @@ def store_selection(store_selected):
     #df_main_store.drop(columns = ['store_nbr'], inplace=True)
 
     #preprocess for the dataframe selected by store
-    df =pd.read_csv("Data/data_pulled_from_GCP/"f'store{store_selected}')
-    df = df[df['date']<'2017-04-01']
-    df.rename(columns = {'date':'ds', 'sales':'y'}, inplace=True)
-    df.drop(columns = ['store_nbr'], inplace=True)
-    df.reset_index(drop=True, inplace=True)
+    df_store_raw =pd.read_csv("Data/data_pulled_from_GCP/"f'store{store_selected}')
+    #df = df[df['date']<'2017-04-01']
+    #df.rename(columns = {'date':'ds', 'sales':'y'}, inplace=True)
+    #df.drop(columns = ['store_nbr'], inplace=True)
+    #df.reset_index(drop=True, inplace=True)
     #return df_main_store
-    return df
 
-def grid_search(df):
+
+    df_store_raw.rename(columns = {'date':'ds', 'sales':'y'}, inplace=True)
+    df_store=df_store_raw.copy().groupby('ds').agg({'y':'sum','is_holiday':'mean','onpromotion':'mean','dcoilwtico':'mean'}).reset_index()
+    #df.drop(columns = ['store_nbr'], inplace=True)
+    df_store.reset_index(drop=True, inplace=True)
+    df_store_train = df_store[df_store['ds']<'2017-04-01']
+    return df_store_raw, df_store, df_store_train
+
+def grid_search(df_filtered):
 
 # Create parameter grid
     params_grid = {'seasonality_mode':(['multiplicative']),
@@ -60,10 +67,10 @@ def grid_search(df):
         m.add_regressor('onpromotion', prior_scale = p['prior_scale_onpromotion'])
         m.add_regressor('dcoilwtico', prior_scale = p['prior_scale_dcoilwtico'])
         m.add_seasonality(name='monthly', period=30.417, fourier_order=p['fourier_order'])
-        m.fit(df[['ds', 'y', 'is_holiday', 'onpromotion', 'dcoilwtico']])
-        df_cv = cross_validation(m, horizon='91 days',initial = '1095 days', parallel="threads")
-        df_p = performance_metrics(df_cv, rolling_window=1)
-        mdape.append(df_p['mdape'].values[0])
+        m.fit(df_filtered[['ds', 'y', 'is_holiday', 'onpromotion', 'dcoilwtico']])
+        df_filtered_cv = cross_validation(m, horizon='91 days',initial = '1095 days', parallel="threads")
+        df_filtered_p = performance_metrics(df_filtered_cv, rolling_window=1)
+        mdape.append(df_filtered_p['mdape'].values[0])
 
     # Find the best parameters
 
@@ -74,9 +81,7 @@ def grid_search(df):
     return tuning_results_min
 
 #def pred ():
-def get_forecast(df,
-                best_params,
-                                ):
+def get_forecast(df, df_filtered, best_params):
 
     m = Prophet(changepoint_prior_scale = best_params.loc[0,'changepoint_prior_scale'],
                 seasonality_prior_scale = best_params.loc[0,'seasonality_prior_scale'],
@@ -89,7 +94,7 @@ def get_forecast(df,
     m.add_regressor('is_holiday', prior_scale = best_params.loc[0,'prior_scale_is_holiday'])
     m.add_regressor('dcoilwtico', prior_scale = best_params.loc[0,'prior_scale_dcoilwtico'])
     m.add_seasonality(name='monthly', period=30.417, fourier_order= best_params.loc[0,'fourier_order'])
-    m.fit(df[['ds', 'y', 'is_holiday', 'onpromotion', 'dcoilwtico']])
+    m.fit(df_filtered[['ds', 'y', 'is_holiday', 'onpromotion', 'dcoilwtico']])
 
     #forecast from prophet
     future=m.make_future_dataframe(periods=91, freq= 'D')
@@ -100,8 +105,3 @@ def get_forecast(df,
     mask = (df_pred['ds'] >='2017-04-01') & (df_pred['ds'] < '2017-06-30')
     df_pred.loc[mask]
     return m, m.predict(future),df_pred.loc[mask]
-
-def regressor_delimitor(df):
-    df.reset_index(inplace=True, drop=True)
-    df=df.rename(columns={'date':'ds', 'sales':'y'})
-    return df
